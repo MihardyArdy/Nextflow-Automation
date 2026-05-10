@@ -152,67 +152,19 @@
             content: ''; display: block; width: 100%; height: 100%;
             background: var(--text);
             transform: translateX(-100%);
-            animation: loadProgress 0.9s var(--ease-out) forwards;
+            animation: loadProgress 0.5s var(--ease-out) forwards;
         }
         @keyframes loadProgress { to { transform: translateX(0); } }
 
         /* ─────────────────────────────────────────────
-           BACKGROUND EFFECTS
+           STATIC DEPTH LAYER (single pre-rendered radial)
            ───────────────────────────────────────────── */
-        #bg-canvas {
-            position: fixed; inset: 0; z-index: 0;
-            pointer-events: none; opacity: 0.55;
-        }
-        .cursor-glow {
-            position: fixed; width: 500px; height: 500px; border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,255,255,0.035) 0%, transparent 60%);
-            pointer-events: none; z-index: 1;
-            margin: -250px 0 0 -250px;
-            mix-blend-mode: screen;
-            will-change: transform;
-        }
-
-        /* ─────────────────────────────────────────────
-           GRAIN + AURORA + DOT GRID (depth layers)
-           ───────────────────────────────────────────── */
-        body::before {
-            content: ''; position: fixed; inset: 0;
-            pointer-events: none; z-index: 1;
-            opacity: 0.04;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-            mix-blend-mode: overlay;
-        }
-        .aurora {
+        .depth-bg {
             position: fixed; inset: 0;
-            pointer-events: none;
-            z-index: 0; overflow: hidden;
-        }
-        .aurora::before, .aurora::after {
-            content: ''; position: absolute;
-            width: 540px; height: 540px;
-            border-radius: 50%;
-            filter: blur(120px);
-            will-change: transform;
-        }
-        .aurora::before {
-            background: radial-gradient(circle, #22c55e 0%, transparent 70%);
-            top: 10%; left: -12%;
-            opacity: 0.14;
-            animation: auroraA 22s ease-in-out infinite alternate;
-        }
-        .aurora::after {
-            background: radial-gradient(circle, #3b82f6 0%, transparent 70%);
-            bottom: 8%; right: -12%;
-            opacity: 0.10;
-            animation: auroraB 26s ease-in-out infinite alternate;
-        }
-        @keyframes auroraA {
-            0%   { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(120px, 80px) scale(1.2); }
-        }
-        @keyframes auroraB {
-            0%   { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(-100px, -60px) scale(1.15); }
+            pointer-events: none; z-index: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% 0%, rgba(34,197,94,0.10), transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(59,130,246,0.07), transparent 60%);
         }
         .hero::before {
             content: ''; position: absolute; inset: 0;
@@ -363,9 +315,9 @@
         }
         header.scrolled {
             padding: 16px 0;
-            background: rgba(5,5,5,0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(5,5,5,0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
         }
         .nav-container { display: flex; justify-content: space-between; align-items: center; }
@@ -389,7 +341,6 @@
             background: rgba(255,255,255,0.03);
             padding: 10px 24px; border-radius: 100px;
             border: 1px solid var(--border);
-            backdrop-filter: blur(10px);
         }
         .nav-links a {
             font-size: 13.5px; font-weight: 500; color: var(--muted);
@@ -437,7 +388,7 @@
         .mobile-menu {
             display: none; position: fixed; inset: 0;
             background: rgba(5,5,5,0.98);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             z-index: 150; flex-direction: column; align-items: center; justify-content: center;
             gap: 40px; opacity: 0; pointer-events: none;
             transition: opacity 0.4s var(--ease);
@@ -552,7 +503,7 @@
         }
         .integrations::before { left: 0; background: linear-gradient(to right, var(--bg-2), transparent); }
         .integrations::after { right: 0; background: linear-gradient(to left, var(--bg-2), transparent); }
-        .marquee { display: flex; width: fit-content; animation: scrollMarquee 30s linear infinite; }
+        .marquee { display: flex; width: fit-content; animation: scrollMarquee 50s linear infinite; will-change: transform; }
         .marquee:hover { animation-play-state: paused; }
         .marquee-content { display: flex; gap: 80px; padding-right: 80px; align-items: center; }
         .integration-item {
@@ -594,7 +545,7 @@
         /* ─────────────────────────────────────────────
            SECTION COMMONS
            ───────────────────────────────────────────── */
-        section { position: relative; z-index: 2; padding: 140px 0; overflow: hidden; }
+        section { position: relative; z-index: 2; padding: 140px 0; overflow: hidden; content-visibility: auto; contain-intrinsic-size: 1px 900px; }
         .bg-marker {
             position: absolute; right: 5%; top: 50%;
             transform: translateY(-50%);
@@ -638,11 +589,12 @@
             transition: transform 0.4s var(--ease), border-color 0.4s var(--ease), box-shadow 0.4s var(--ease);
             position: relative; overflow: hidden;
             display: flex; flex-direction: column; height: 100%;
+            contain: layout paint;
         }
         .service-card::before {
-            content: ''; position: absolute; inset: 0;
-            background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.06), transparent 40%);
-            opacity: 0; transition: opacity 0.5s; pointer-events: none;
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(34,197,94,0.5), transparent);
+            opacity: 0; transition: opacity 0.4s; pointer-events: none;
         }
         .service-card:hover {
             transform: translateY(-8px); border-color: var(--border-2);
@@ -696,7 +648,7 @@
         .abstract-art-1 {
             width: 200px; height: 200px; border-radius: 50%;
             background: conic-gradient(from 180deg at 50% 50%, #2a8af6 0deg, #a853ba 180deg, #e92a67 360deg);
-            filter: blur(40px); opacity: 0.6;
+            filter: blur(30px); opacity: 0.55;
             transition: transform 0.8s var(--ease);
         }
         .abstract-art-2 {
@@ -743,7 +695,6 @@
         .step-num-wrap::after {
             content: ''; position: absolute; inset: -8px;
             border: 1px dashed var(--border-2); border-radius: 50%;
-            animation: rotate 20s linear infinite;
             opacity: 0; transition: opacity 0.4s;
         }
         @keyframes rotate { to { transform: rotate(360deg); } }
@@ -751,7 +702,7 @@
             border-color: var(--text); transform: scale(1.05);
             box-shadow: 0 0 30px rgba(255,255,255,0.05);
         }
-        .step:hover .step-num-wrap::after { opacity: 1; }
+        .step:hover .step-num-wrap::after { opacity: 1; animation: rotate 20s linear infinite; }
         .step-num { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: var(--text); }
         .step h3 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 16px; }
         .step p { font-size: 15px; color: var(--muted); line-height: 1.7; }
@@ -786,8 +737,6 @@
         /* ─────────────────────────────────────────────
            PRICING
            ───────────────────────────────────────────── */
-        @property --angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
-
         #harga { background: var(--bg); border-top: 1px solid var(--border); }
         .pricing-grid {
             display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
@@ -802,23 +751,14 @@
         .price-card:not(.featured):hover { border-color: var(--border-2); transform: translateY(-8px); }
 
         .price-card.featured {
-            border-color: transparent !important;
+            border: 1px solid transparent !important;
             padding: 64px 40px;
             box-shadow: 0 30px 60px -20px rgba(0,0,0,0.8);
             z-index: 1; transform: translateY(-8px);
+            background:
+                linear-gradient(180deg, var(--bg-3) 0%, var(--bg-2) 100%) padding-box,
+                linear-gradient(135deg, rgba(34,197,94,0.6), rgba(255,255,255,0.4) 50%, rgba(34,197,94,0.3)) border-box;
         }
-        .price-card.featured::before {
-            content: ''; position: absolute; inset: -1px; z-index: -2;
-            border-radius: inherit;
-            background: conic-gradient(from var(--angle), transparent 20%, rgba(255,255,255,0.8) 40%, transparent 60%);
-            animation: spinGlow 4s linear infinite;
-        }
-        .price-card.featured::after {
-            content: ''; position: absolute; inset: 0; z-index: -1;
-            border-radius: inherit;
-            background: linear-gradient(180deg, var(--bg-3) 0%, var(--bg-2) 100%);
-        }
-        @keyframes spinGlow { to { --angle: 360deg; } }
 
         .badge {
             position: absolute; top: 0; left: 50%;
@@ -900,14 +840,9 @@
         }
         .cta-glow {
             position: absolute; width: 800px; height: 800px; border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
+            background: radial-gradient(circle, rgba(34,197,94,0.06) 0%, transparent 60%);
             top: 50%; left: 50%; transform: translate(-50%, -50%);
             pointer-events: none;
-            animation: pulseGlow 4s ease-in-out infinite alternate;
-        }
-        @keyframes pulseGlow {
-            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
-            100% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
         }
         .cta-section h2 {
             font-family: 'Syne', sans-serif;
@@ -1029,8 +964,6 @@
             .footer-inner { grid-template-columns: 1fr; gap: 40px; }
             .footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
             .steps-wrapper::before { left: 52px; }
-            #bg-canvas { display: none; }
-            .aurora::before, .aurora::after { opacity: 0.06; filter: blur(80px); }
             .trust-row { gap: 20px; padding-top: 24px; }
             .trust-row .item { font-size: 12px; }
             #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; }
@@ -1047,8 +980,7 @@
                 scroll-behavior: auto !important;
             }
             .reveal { opacity: 1; transform: none; }
-            #bg-canvas, .cursor-glow, .cta-glow, .aurora { display: none; }
-            body::before, .hero::before { display: none; }
+            .cta-glow { display: none; }
         }
     </style>
 </head>
@@ -1056,9 +988,6 @@
 
 <!-- SCROLL PROGRESS -->
 <div id="scroll-progress" aria-hidden="true"></div>
-
-<!-- AURORA DEPTH LAYER -->
-<div class="aurora" aria-hidden="true"></div>
 
 <!-- ─── SVG SYMBOLS (reusable icons) ─── -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -1080,9 +1009,8 @@
     </div>
 </div>
 
-<!-- CURSOR GLOW (ambient only) -->
-<canvas id="bg-canvas" aria-hidden="true"></canvas>
-<div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+<!-- STATIC BG DEPTH LAYER -->
+<div class="depth-bg" aria-hidden="true"></div>
 
 <!-- NAVBAR -->
 <header id="navbar">
@@ -1177,8 +1105,6 @@
             <div class="integration-item">WooCommerce</div>
             <div class="integration-item">Trello</div>
             <div class="integration-item">Airtable</div>
-            <div class="integration-item">Zapier</div>
-            <div class="integration-item">Discord</div>
         </div>
         <div class="marquee-content">
             <div class="integration-item">Gmail</div>
@@ -1187,8 +1113,6 @@
             <div class="integration-item">WooCommerce</div>
             <div class="integration-item">Trello</div>
             <div class="integration-item">Airtable</div>
-            <div class="integration-item">Zapier</div>
-            <div class="integration-item">Discord</div>
         </div>
     </div>
 </div>
@@ -1578,146 +1502,13 @@
             const loader = document.getElementById('page-loader');
             loader.style.transform = 'translateY(-100%)';
             setTimeout(() => document.body.classList.remove('loading'), 400);
-        }, reduceMotion ? 0 : 900);
+        }, reduceMotion ? 0 : 300);
     });
 
-    /* ── UNIFIED MOUSE TRACKING ── */
-    let mouseX = window.innerWidth / 2;
-    let mouseY = window.innerHeight / 2;
+    /* No per-frame decorations — bg handled by static CSS .depth-bg */
 
-    /* ── AMBIENT CURSOR GLOW (desktop only) ── */
-    if (isDesktop && !reduceMotion) {
-        const glow = document.getElementById('cursorGlow');
-        let glowX = mouseX, glowY = mouseY;
+    /* ── SERVICE CARD: no mouse tracking (static hover effect via CSS) ── */
 
-        document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-        }, { passive: true });
-
-        function tickGlow() {
-            glowX += (mouseX - glowX) * 0.08;
-            glowY += (mouseY - glowY) * 0.08;
-            glow.style.transform = `translate3d(${glowX}px, ${glowY}px, 0)`;
-            requestAnimationFrame(tickGlow);
-        }
-        tickGlow();
-    } else {
-        // remove decorative layers on touch / reduced motion
-        const g = document.getElementById('cursorGlow');
-        if (g) g.remove();
-    }
-
-    /* ── CONSTELLATION CANVAS (optimised, paused when offscreen) ── */
-    const canvas = document.getElementById('bg-canvas');
-    const isMobileLayout = window.matchMedia('(max-width: 768px)').matches;
-
-    if (canvas && !reduceMotion && !isMobileLayout) {
-        const ctx = canvas.getContext('2d', { alpha: true });
-        let W = 0, H = 0, particles = [];
-        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-        let pointerX = null, pointerY = null, running = true;
-
-        function resize() {
-            W = window.innerWidth;
-            H = window.innerHeight;
-            canvas.width = W * dpr;
-            canvas.height = H * dpr;
-            canvas.style.width = W + 'px';
-            canvas.style.height = H + 'px';
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            initParticles();
-        }
-
-        function initParticles() {
-            particles = [];
-            // lower density than before (was /9000) and cap at 120
-            const count = Math.min(Math.floor((W * H) / 14000), 120);
-            for (let i = 0; i < count; i++) {
-                particles.push({
-                    x: Math.random() * W,
-                    y: Math.random() * H,
-                    baseX: 0, baseY: 0,
-                    size: Math.random() * 1.2 + 0.4,
-                    vx: (Math.random() - 0.5) * 0.35,
-                    vy: (Math.random() - 0.5) * 0.35,
-                    density: Math.random() * 20 + 5,
-                });
-                const p = particles[i]; p.baseX = p.x; p.baseY = p.y;
-            }
-        }
-
-        const MAX_LINK_DIST = 120;
-        const MAX_LINK_DIST_SQ = MAX_LINK_DIST * MAX_LINK_DIST;
-
-        function step() {
-            if (!running) { requestAnimationFrame(step); return; }
-            ctx.clearRect(0, 0, W, H);
-
-            for (let i = 0; i < particles.length; i++) {
-                const p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                if (p.x < p.baseX - 30 || p.x > p.baseX + 30) p.vx *= -1;
-                if (p.y < p.baseY - 30 || p.y > p.baseY + 30) p.vy *= -1;
-
-                // pointer repulsion
-                if (pointerX !== null) {
-                    const dx = pointerX - p.x, dy = pointerY - p.y;
-                    const dist = Math.hypot(dx, dy);
-                    if (dist < 120 && dist > 0) {
-                        const force = (120 - dist) / 120;
-                        p.x -= (dx / dist) * force * p.density * 0.4;
-                        p.y -= (dy / dist) * force * p.density * 0.4;
-                    }
-                }
-
-                ctx.fillStyle = 'rgba(255,255,255,0.4)';
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            // connections — early exit using squared distance (no sqrt)
-            ctx.lineWidth = 1;
-            for (let a = 0; a < particles.length; a++) {
-                const p1 = particles[a];
-                for (let b = a + 1; b < particles.length; b++) {
-                    const p2 = particles[b];
-                    const dx = p1.x - p2.x, dy = p1.y - p2.y;
-                    const dsq = dx * dx + dy * dy;
-                    if (dsq < MAX_LINK_DIST_SQ) {
-                        const opacity = (1 - dsq / MAX_LINK_DIST_SQ) * 0.15;
-                        ctx.strokeStyle = `rgba(255,255,255,${opacity})`;
-                        ctx.beginPath();
-                        ctx.moveTo(p1.x, p1.y);
-                        ctx.lineTo(p2.x, p2.y);
-                        ctx.stroke();
-                    }
-                }
-            }
-            requestAnimationFrame(step);
-        }
-
-        window.addEventListener('resize', resize, { passive: true });
-        window.addEventListener('mousemove', (e) => { pointerX = e.clientX; pointerY = e.clientY; }, { passive: true });
-        window.addEventListener('mouseout', () => { pointerX = null; pointerY = null; });
-        document.addEventListener('visibilitychange', () => { running = !document.hidden; });
-
-        resize();
-        step();
-    } else if (canvas) {
-        canvas.remove();
-    }
-
-    /* ── SERVICE CARD SPOTLIGHT ── */
-    document.querySelectorAll('.service-card').forEach(card => {
-        card.addEventListener('mousemove', (e) => {
-            const r = card.getBoundingClientRect();
-            card.style.setProperty('--mouse-x', `${e.clientX - r.left}px`);
-            card.style.setProperty('--mouse-y', `${e.clientY - r.top}px`);
-        });
-    });
 
     /* ── STICKY HEADER + SCROLL PROGRESS + BACK TO TOP (unified scroll handler) ── */
     const header = document.getElementById('navbar');
@@ -1818,20 +1609,7 @@
         });
     });
 
-    /* ── MAGNETIC BUTTONS (desktop only) ── */
-    if (isDesktop && !reduceMotion) {
-        document.querySelectorAll('.btn').forEach(btn => {
-            btn.addEventListener('mousemove', (e) => {
-                const r = btn.getBoundingClientRect();
-                const x = e.clientX - r.left - r.width / 2;
-                const y = e.clientY - r.top - r.height / 2;
-                btn.style.transform = `translate(${x * 0.18}px, ${y * 0.18}px)`;
-            });
-            btn.addEventListener('mouseleave', () => {
-                btn.style.transform = '';
-            });
-        });
-    }
+    /* Magnetic buttons removed for performance — subtle hover translate via CSS is enough */
 
     /* ── STAT COUNTERS (reads data-target) ── */
     function animateCounter(el) {
